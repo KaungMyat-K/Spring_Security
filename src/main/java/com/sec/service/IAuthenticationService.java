@@ -10,10 +10,8 @@ public interface IAuthenticationService extends IBaseService<Employee>{
 
 	public Employee getEmployeeByPhone(String phone);
 	
-	public LoginResponse authenticateUser(LoginRequest req);
+	public LoginResponse authenticateUser(LoginRequest req,HttpServletResponse res);
 	
 	public void logout(HttpServletResponse res);
-
-	public void setCookies(String accessToken,String refreshToke,HttpServletResponse res);
 	
 }

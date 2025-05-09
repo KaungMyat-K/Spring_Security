@@ -7,8 +7,8 @@ import com.sec.response.LoginResponse;
 public class Converter {
 	
 
-	public static LoginResponse getLoginRes(String accessToken,String refreshToken,long employeeKey) {
-		return new LoginResponse(accessToken, refreshToken,String.valueOf(employeeKey));
+	public static LoginResponse getLoginRes(long employeeKey) {
+		return new LoginResponse(String.valueOf(employeeKey));
 	}
 	
 	public static Employee getEmployee(SignInRequest req) {

@@ -29,11 +29,7 @@ abstract class BaseController {
 	protected ResponseEntity<Object> successResponse(Object o) {
 		return new ResponseEntity<Object>(o, HttpStatus.OK);
 	}
-	
-	protected ResponseEntity<Object> successResponse(Object o,HttpHeaders header) {
-		return new ResponseEntity<Object>(o,header,HttpStatus.OK);
-	}
-	
+
 	protected void logInfo(String msg) {
 		System.out.println(msg);
 	}

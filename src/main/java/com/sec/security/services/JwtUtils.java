@@ -2,6 +2,8 @@ package com.sec.security.services;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -12,6 +14,7 @@ import org.springframework.web.util.WebUtils;
 
 import com.sec.exception.BadRequestException;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
@@ -43,7 +46,7 @@ public class JwtUtils {
     private String refreshCookieName;
     
     
-    public String generateJwtToken(String userName,String type) {
+    public String generateJwtToken(String id,String phone,String type) {
     	int expireTime;
     	Key key;
     	if("refresh".equalsIgnoreCase(type)) {
@@ -53,12 +56,16 @@ public class JwtUtils {
     		expireTime = accessJWTExpirationMs;
     		key = accessKey();
     	}
+        Map<String, Object> claims = new HashMap<>();
+            claims.put("id", id);
+            claims.put("phone", phone);
+
         return Jwts.builder()
-            .setSubject(userName)
-            .setIssuedAt(new Date())
-            .setExpiration(new Date((new Date()).getTime() + expireTime))
-            .signWith(key, SignatureAlgorithm.HS256)
-            .compact();
+                    .setClaims(claims)
+                    .setIssuedAt(new Date())
+                    .setExpiration(new Date((new Date()).getTime() + expireTime))
+                    .signWith(key, SignatureAlgorithm.HS256)
+                    .compact();
     }
       
     private Key accessKey() {
@@ -89,12 +96,15 @@ public class JwtUtils {
 
     private String parseToken(String token, Key key, String tokenType) {
         try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody()
-                    .getSubject();
+            Claims claims =  Jwts.parserBuilder()
+                            .setSigningKey(key)
+                            .build()
+                            .parseClaimsJws(token)
+                            .getBody();
+            String id = claims.get("id", String.class);
+            String phone = claims.get("phone", String.class);
+                    
+            return id+"|"+phone;
         } catch (SignatureException e) {
             throw new BadRequestException("Invalid " + tokenType + " token signature");
         } catch (MalformedJwtException e) {

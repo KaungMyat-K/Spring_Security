@@ -90,39 +90,16 @@ public class AuthenticationServiceImpl implements IAuthenticationService{
 	}
 
 	@Override
-	public LoginResponse authenticateUser(LoginRequest req) {
+	public LoginResponse authenticateUser(LoginRequest req,HttpServletResponse res) {
 		Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(req.getPhone(),req.getPasscode()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
 		UserDetailsImpl userDetailsImpl = (UserDetailsImpl) authentication.getPrincipal();
-        String accessToken = jwtUtils.generateJwtToken(userDetailsImpl.getPhone(),"access");
-        String refreshToken = jwtUtils.generateJwtToken(userDetailsImpl.getPhone(),"refresh");
+        String accessToken = jwtUtils.generateJwtToken(String.valueOf(userDetailsImpl.getId()),userDetailsImpl.getPhone(),"access");
+        String refreshToken = jwtUtils.generateJwtToken(String.valueOf(userDetailsImpl.getId()),userDetailsImpl.getPhone(),"refresh");
 		//save refresh token in DB
-        return Converter.getLoginRes(accessToken,refreshToken,userDetailsImpl.getId());
+		setCookies(accessToken, refreshToken,res);
+        return Converter.getLoginRes(userDetailsImpl.getId());
 	}
-
-	@Override
-	public void setCookies(String accessToken,String refreshToken,HttpServletResponse res) {
-		
-		boolean isProd = "prod".equalsIgnoreCase(appEnv);
-		
-		ResponseCookie accessCookie = ResponseCookie.from(accessCookieName, accessToken)
-													.httpOnly(true)
-													.secure(isProd)
-													.path("/")
-													.maxAge(accessJWTExpirationMs/1000) 
-													.build();
-		ResponseCookie refreshCookie = ResponseCookie.from(refreshCookieName, refreshToken)
-													.httpOnly(true)
-													.secure(isProd)
-													.path("/")
-													.maxAge(refreshJWTExpirationMs/1000) 	
-													.build();
-		res.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
-		res.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-		
-	}
-
-
 
 	@Override
 	public void logout(HttpServletResponse res) {
@@ -146,7 +123,25 @@ public class AuthenticationServiceImpl implements IAuthenticationService{
 		res.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 	}
 	
-	
+	private void setCookies(String accessToken,String refreshToken,HttpServletResponse res) {
+		
+		boolean isProd = "prod".equalsIgnoreCase(appEnv);
+		
+		ResponseCookie accessCookie = ResponseCookie.from(accessCookieName, accessToken)
+													.httpOnly(true)
+													.secure(isProd)
+													.path("/")
+													.maxAge(accessJWTExpirationMs/1000) 
+													.build();
+		ResponseCookie refreshCookie = ResponseCookie.from(refreshCookieName, refreshToken)
+													.httpOnly(true)
+													.secure(isProd)
+													.path("/")
+													.maxAge(refreshJWTExpirationMs/1000) 	
+													.build();
+		res.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+		res.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());	
+	}
 	
 	
 }
